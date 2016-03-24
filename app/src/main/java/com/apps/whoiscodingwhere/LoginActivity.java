@@ -4,9 +4,11 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.LoaderManager.LoaderCallbacks;
+import android.content.Context;
 import android.content.CursorLoader;
 import android.content.Intent;
 import android.content.Loader;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -72,10 +74,15 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
+    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        prefs = this.getSharedPreferences(
+                "com.apps.whoiscodingwhere", Context.MODE_PRIVATE);
+
         FacebookSdk.sdkInitialize(getApplicationContext());
 
         AccessTokenTracker accessTokenTracker = new AccessTokenTracker() {
@@ -89,10 +96,14 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         };
         // If the access token is available already assign it.
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        if(accessToken!=null)
-        Log.e("rpanidep","accessToken = "+accessToken.getToken());
+        if (accessToken != null)
+            Log.e("rpanidep", "accessToken = " + accessToken.getToken());
 
-
+        if (!prefs.getString("accesstoken", "invalid").equals("invalid")) {
+            Intent i = new Intent(getApplicationContext(), TagsSelection.class);
+            startActivity(i);
+            finish();
+        }
         callbackManager = CallbackManager.Factory.create();
         setContentView(R.layout.activity_login);
         // Set up the login form.
@@ -129,20 +140,23 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             @Override
             public void onSuccess(LoginResult loginResult) {
                 // App code
-                Log.e("rpanidep","success"+loginResult.getAccessToken().getToken()+"   "+loginResult.toString()+" "+loginResult.getAccessToken().getUserId());
+                Log.e("rpanidep", "success" + loginResult.getAccessToken().getToken() + "   " + loginResult.toString() + " " + loginResult.getAccessToken().getUserId());
+                prefs.edit().putString("accesstoken", loginResult.getAccessToken().getToken()).apply();
+                Intent i = new Intent(getApplicationContext(), MainActivity.class);
+                startActivity(i);
             }
 
             @Override
             public void onCancel() {
                 // App code
-                Log.e("rpanidep","cancel");
+                Log.e("rpanidep", "cancel");
 
             }
 
             @Override
             public void onError(FacebookException exception) {
                 // App code
-                Log.e("rpanidep","error");
+                Log.e("rpanidep", "error");
 
             }
         });
@@ -244,6 +258,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             mAuthTask.execute((Void) null);
         }
     }
+
     private boolean isEmailValid(String email) {
         //TODO: Replace this with your own logic
         return email.contains("@");
@@ -300,7 +315,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 // Select only email addresses.
                 ContactsContract.Contacts.Data.MIMETYPE +
                         " = ?", new String[]{ContactsContract.CommonDataKinds.Email
-                                                                     .CONTENT_ITEM_TYPE},
+                .CONTENT_ITEM_TYPE},
 
                 // Show primary email addresses first. Note that there won't be
                 // a primary email address if the user hasn't specified one.
