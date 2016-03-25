@@ -4,7 +4,10 @@ var Post = require('../models/postmodel');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-  res.send('respond with a resource');
+  Post.find({},function(err,posts){
+  	if(err) throw err;
+  	res.json(posts);
+  });
 });
 
 router.post('/', function(req, res, next) {
