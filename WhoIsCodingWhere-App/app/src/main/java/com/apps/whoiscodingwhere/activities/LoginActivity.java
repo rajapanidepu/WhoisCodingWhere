@@ -194,7 +194,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 JSONObject object,
                                 GraphResponse response) {
                             // Application code
-                            Log.e("rpanidep", object.toString());
+                            Log.e("rpanidep-->", object.toString());
                             RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
                             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Constants.ServerURL + "/user", object, new Response.Listener<JSONObject>() {
                                 @Override

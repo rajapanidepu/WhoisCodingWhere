@@ -181,14 +181,15 @@ public class MainActivity extends AppCompatActivity
 
     private void loadPostsFromServer() {
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        String uri = String.format("http://somesite.com/some_endpoint.php?userid=%1$s",
-                "");
-
+        String uri = String.format(Constants.ServerURL + "/posts?userid=%1$s",
+                "   ");
+        Log.e("rpanidep", "Loading posts from server");
         StringRequest myReq = new StringRequest(Request.Method.GET,
                 uri,
                 new Response.Listener<String>() {
                     @Override
                     public void onResponse(String response) {
+                        Log.e("rpanidep", "posts from server " + response);
 
                         parseJsonArray(response);
 
@@ -197,7 +198,7 @@ public class MainActivity extends AppCompatActivity
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-
+                        error.printStackTrace();
                     }
                 });
         queue.add(myReq);

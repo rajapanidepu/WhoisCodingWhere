@@ -11,7 +11,15 @@ public class PostModel {
     Location location;
     Boolean isHelpNeeded;
 
+    public String getUserId() {
+        return userId;
+    }
 
+    public void setUserId(String userId) {
+        this.userId = userId;
+    }
+
+    String userId;
     String userName;
 
     public PostModel(String userName, String languages, String info, Location location, Boolean isHelpNeeded) {
