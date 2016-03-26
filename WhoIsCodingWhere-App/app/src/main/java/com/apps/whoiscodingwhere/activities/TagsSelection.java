@@ -1,9 +1,7 @@
-package com.apps.whoiscodingwhere;
+package com.apps.whoiscodingwhere.activities;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -19,13 +17,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TabHost;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.anton46.collectionitempicker.CollectionPicker;
 import com.anton46.collectionitempicker.Item;
 import com.anton46.collectionitempicker.OnItemClickListener;
+import com.apps.whoiscodingwhere.R;
 
 import java.util.ArrayList;
 import java.util.HashSet;

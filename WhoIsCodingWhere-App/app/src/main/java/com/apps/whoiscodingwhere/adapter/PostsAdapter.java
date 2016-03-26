@@ -1,4 +1,4 @@
-package com.apps.whoiscodingwhere;
+package com.apps.whoiscodingwhere.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -6,11 +6,18 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.apps.whoiscodingwhere.R;
+import com.apps.whoiscodingwhere.model.PostModel;
+import com.facebook.AccessToken;
+import com.facebook.login.widget.ProfilePictureView;
+
+import java.util.ArrayList;
+
 /**
  * Created by rpanidep on 3/25/2016.
  */
 public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> {
-    private String[] mDataset;
+    private ArrayList<PostModel>  mDataset;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -26,7 +33,7 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public PostsAdapter(String[] myDataset) {
+    public PostsAdapter(ArrayList<PostModel> myDataset) {
         mDataset = myDataset;
     }
 
@@ -49,13 +56,15 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         TextView tv = (TextView) holder.mView.findViewById(R.id.info_text);
-        tv.setText(mDataset[position]);
-
+        tv.setText(mDataset.get(position).getUserName());
+        ProfilePictureView profilePictureView;
+        profilePictureView = (ProfilePictureView) holder.mView.findViewById(R.id.friendProfilePicture);
+        profilePictureView.setProfileId(AccessToken.getCurrentAccessToken().getUserId());
     }
 
     // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
-        return mDataset.length;
+        return mDataset.size();
     }
 }

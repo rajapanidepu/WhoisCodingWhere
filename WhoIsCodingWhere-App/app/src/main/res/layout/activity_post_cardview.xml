@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_height="220dp"
-    android:layout_width="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="220dp">
+
     <android.support.v7.widget.CardView xmlns:card_view="http://schemas.android.com/apk/res-auto"
         android:id="@+id/card_view"
         android:layout_width="match_parent"
@@ -12,9 +12,35 @@
         card_view:cardCornerRadius="4dp"
         card_view:cardElevation="4dp">
 
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true">
+
+            <com.facebook.login.widget.ProfilePictureView
+                android:id="@+id/friendProfilePicture"
+                android:layout_width="160dp"
+                android:layout_height="160dp"></com.facebook.login.widget.ProfilePictureView>
+
+            <ImageView
+                android:id="@+id/android"
+                android:layout_width="160dp"
+                android:layout_height="160dp"
+                android:contentDescription="@null"
+                android:src="@drawable/s_circle" />
+
+        </FrameLayout>
+
         <TextView
             android:id="@+id/info_text"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:gravity="right" />
     </android.support.v7.widget.CardView>
+
 </LinearLayout>

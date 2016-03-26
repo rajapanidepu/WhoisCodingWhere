@@ -1,4 +1,4 @@
-package com.apps.whoiscodingwhere;
+package com.apps.whoiscodingwhere.activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -31,15 +31,26 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.apps.whoiscodingwhere.R;
+import com.apps.whoiscodingwhere.constants.Constants;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,12 +62,10 @@ import static android.Manifest.permission.READ_CONTACTS;
  */
 public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<Cursor> {
 
-    CallbackManager callbackManager;
     /**
      * Id to identity READ_CONTACTS permission request.
      */
     private static final int REQUEST_READ_CONTACTS = 0;
-
     /**
      * A dummy authentication store containing known user names and passwords.
      * TODO: remove after connecting to a real authentication system.
@@ -64,26 +73,28 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     private static final String[] DUMMY_CREDENTIALS = new String[]{
             "foo@example.com:hello", "bar@example.com:world"
     };
+    CallbackManager callbackManager;
+    SharedPreferences prefs;
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
     private UserLoginTask mAuthTask = null;
-
     // UI references.
     private AutoCompleteTextView mEmailView;
     private EditText mPasswordView;
     private View mProgressView;
     private View mLoginFormView;
-    SharedPreferences prefs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+
         prefs = this.getSharedPreferences(
                 "com.apps.whoiscodingwhere", Context.MODE_PRIVATE);
 
         FacebookSdk.sdkInitialize(getApplicationContext());
+        Log.e("rpanidep", "hash " + FacebookSdk.getApplicationSignature(getApplicationContext()));
 
         AccessTokenTracker accessTokenTracker = new AccessTokenTracker() {
             @Override
@@ -92,12 +103,18 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                     AccessToken currentAccessToken) {
                 // Set the access token using
                 // currentAccessToken when it's loaded or set.
+                Log.e("rpanidep", "updated accessToken = " + currentAccessToken.getToken());
+                getUserFacebookInfo();
             }
         };
         // If the access token is available already assign it.
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
-        if (accessToken != null)
+        if (accessToken != null) {
             Log.e("rpanidep", "accessToken = " + accessToken.getToken());
+            getUserFacebookInfo();
+        } else {
+            Log.e("rpanidep", "accessToken is null");
+        }
 
         if (!prefs.getString("accesstoken", "invalid").equals("invalid")) {
             Intent i = new Intent(getApplicationContext(), TagsSelection.class);
@@ -142,6 +159,7 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                 // App code
                 Log.e("rpanidep", "success" + loginResult.getAccessToken().getToken() + "   " + loginResult.toString() + " " + loginResult.getAccessToken().getUserId());
                 prefs.edit().putString("accesstoken", loginResult.getAccessToken().getToken()).apply();
+                getUserFacebookInfo();
                 Intent i = new Intent(getApplicationContext(), MainActivity.class);
                 startActivity(i);
             }
@@ -161,6 +179,45 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
             }
         });
 
+    }
+
+    private void getUserFacebookInfo() {
+        AccessToken accessToken = AccessToken.getCurrentAccessToken();
+        if (accessToken != null) {
+            Log.e("rpanidep", "at Login getUserFacebookInfo accessToken = " + accessToken.getToken());
+
+            GraphRequest request = GraphRequest.newMeRequest(
+                    accessToken,
+                    new GraphRequest.GraphJSONObjectCallback() {
+                        @Override
+                        public void onCompleted(
+                                JSONObject object,
+                                GraphResponse response) {
+                            // Application code
+                            Log.e("rpanidep", object.toString());
+                            RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+                            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Constants.ServerURL + "/user", object, new Response.Listener<JSONObject>() {
+                                @Override
+                                public void onResponse(JSONObject response) {
+                                    Log.e("rpanidep", "at Login, response " + response.toString());
+                                }
+                            }, new Response.ErrorListener() {
+                                @Override
+                                public void onErrorResponse(VolleyError error) {
+                                    error.printStackTrace();
+                                }
+                            });
+                            queue.add(jsonObjectRequest);
+
+                        }
+                    });
+
+
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "id,name,first_name,last_name,link,email");
+            request.setParameters(parameters);
+            request.executeAsync();
+        }
     }
 
     private void populateAutoComplete() {
@@ -339,17 +396,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
 
     }
 
-    private interface ProfileQuery {
-        String[] PROJECTION = {
-                ContactsContract.CommonDataKinds.Email.ADDRESS,
-                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
-        };
-
-        int ADDRESS = 0;
-        int IS_PRIMARY = 1;
-    }
-
-
     private void addEmailsToAutoComplete(List<String> emailAddressCollection) {
         //Create adapter to tell the AutoCompleteTextView what to show in its dropdown list.
         ArrayAdapter<String> adapter =
@@ -375,6 +421,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+
+    private interface ProfileQuery {
+        String[] PROJECTION = {
+                ContactsContract.CommonDataKinds.Email.ADDRESS,
+                ContactsContract.CommonDataKinds.Email.IS_PRIMARY,
+        };
+
+        int ADDRESS = 0;
+        int IS_PRIMARY = 1;
     }
 
     /**
