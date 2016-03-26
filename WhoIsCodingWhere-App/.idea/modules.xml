@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/WhoisCodingWhere.iml" filepath="$PROJECT_DIR$/WhoisCodingWhere.iml" />
+      <module fileurl="file://$PROJECT_DIR$/WhoIsCodingWhere-App.iml" filepath="$PROJECT_DIR$/WhoIsCodingWhere-App.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
 </project>
+
