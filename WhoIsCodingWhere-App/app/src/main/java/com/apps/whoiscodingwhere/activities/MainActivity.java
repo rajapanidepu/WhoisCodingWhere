@@ -40,11 +40,7 @@ import com.apps.whoiscodingwhere.R;
 import com.apps.whoiscodingwhere.adapter.PostsAdapter;
 import com.apps.whoiscodingwhere.constants.Constants;
 import com.apps.whoiscodingwhere.model.PostModel;
-import com.facebook.AccessToken;
-import com.facebook.GraphRequest;
-import com.facebook.GraphRequestBatch;
-import com.facebook.GraphResponse;
-import com.facebook.HttpMethod;
+import com.apps.whoiscodingwhere.model.PostsResponse;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.ConnectionResult;
@@ -58,9 +54,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,19 +64,18 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final int REQUEST_CHECK_SETTINGS = 1;
+    Location mLastLocation;
+    PendingResult<LocationSettingsResult> result;
+    ArrayList<PostModel> myDataset = new ArrayList<PostModel>();
     private int MY_PERMISSIONS_REQUEST_LOCATION = 2;
-
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
-    Location mLastLocation;
-    PendingResult<LocationSettingsResult> result;
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
-    ArrayList<PostModel> myDataset = new ArrayList<PostModel>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,9 +83,6 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-
-
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -121,7 +111,7 @@ public class MainActivity extends AppCompatActivity
 
 
                                 RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-                                StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.ServerURL+"/post",
+                                StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.ServerURL + "/post",
                                         new Response.Listener<String>() {
                                             @Override
                                             public void onResponse(String response) {
@@ -171,8 +161,7 @@ public class MainActivity extends AppCompatActivity
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
-        mRecyclerView.setLayoutManager(mLayoutManager);
-
+        loadPostsFromServer();
         myDataset.add(new PostModel("Raja", "Java", "", null, true));
         myDataset.add(new PostModel("Teja", "C++", "", null, true));
         myDataset.add(new PostModel("Ravi", "PHP", "", null, false));
@@ -188,6 +177,37 @@ public class MainActivity extends AppCompatActivity
         client = new GoogleApiClient.Builder(this).addOnConnectionFailedListener(this).addConnectionCallbacks(this).addApi(AppIndex.API).addApi(LocationServices.API).build();
 
 
+    }
+
+    private void loadPostsFromServer() {
+        RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
+        String uri = String.format("http://somesite.com/some_endpoint.php?userid=%1$s",
+                "");
+
+        StringRequest myReq = new StringRequest(Request.Method.GET,
+                uri,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+
+                        parseJsonArray(response);
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+
+                    }
+                });
+        queue.add(myReq);
+
+    }
+
+    private void parseJsonArray(String jsonString) {
+        Gson gson = new Gson();
+        PostsResponse pr = gson.fromJson(jsonString.toString(), PostsResponse.class);
+        myDataset.addAll(pr.getPosts());
     }
 
 
