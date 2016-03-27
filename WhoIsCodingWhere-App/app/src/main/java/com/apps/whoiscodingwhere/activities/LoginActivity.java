@@ -50,6 +50,7 @@ import com.facebook.appevents.AppEventsLogger;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -195,8 +196,16 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 GraphResponse response) {
                             // Application code
                             Log.e("rpanidep-->", object.toString());
+                            try {
+                                prefs.edit().putString("name", object.getString("name")).apply();
+                                prefs.edit().putString("first_name", object.getString("first_name")).apply();
+                                prefs.edit().putString("last_name", object.getString("last_name")).apply();
+                                prefs.edit().putString("email", object.getString("email")).apply();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
                             RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-                            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Constants.ServerURL + "/user", object, new Response.Listener<JSONObject>() {
+                            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Constants.ServerURL + "/users", object, new Response.Listener<JSONObject>() {
                                 @Override
                                 public void onResponse(JSONObject response) {
                                     Log.e("rpanidep", "at Login, response " + response.toString());
@@ -207,11 +216,9 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                     error.printStackTrace();
                                 }
                             });
-                            queue.add(jsonObjectRequest);
-
+                            //queue.add(jsonObjectRequest);
                         }
                     });
-
 
             Bundle parameters = new Bundle();
             parameters.putString("fields", "id,name,first_name,last_name,link,email");

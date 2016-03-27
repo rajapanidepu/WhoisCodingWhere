@@ -6,7 +6,10 @@ var Post = require('../models/postmodel');
 router.get('/', function(req, res, next) {
   Post.find({},function(err,posts){
   	if(err) throw err;
-  	res.json(posts);
+  	console.log(posts);
+  	res.json({
+  		"PostsResponse":posts
+  	});
   });
 });
 

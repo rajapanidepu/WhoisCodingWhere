@@ -56,10 +56,11 @@ public class PostsAdapter extends RecyclerView.Adapter<PostsAdapter.ViewHolder> 
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
         TextView tv = (TextView) holder.mView.findViewById(R.id.info_text);
-        tv.setText(mDataset.get(position).getUserName());
+        String postText = mDataset.get(position).getUserName()+" is coding on "+mDataset.get(position).getLanguages();
+        tv.setText(postText);
         ProfilePictureView profilePictureView;
         profilePictureView = (ProfilePictureView) holder.mView.findViewById(R.id.friendProfilePicture);
-        profilePictureView.setProfileId(AccessToken.getCurrentAccessToken().getUserId());
+        profilePictureView.setProfileId(mDataset.get(position).getUserId());
     }
 
     // Return the size of your dataset (invoked by the layout manager)

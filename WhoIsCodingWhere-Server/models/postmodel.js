@@ -5,12 +5,9 @@ var Schema = mongoose.Schema;
 var postSchema = new Schema({
   name: String,
   location: String,
-  meta: {
-    age: Number,
-    website: String
-  },
-  text: String,
-  description: String,
+  languages: String,
+  info: String,
+  userId:String,
   need_help : Boolean,
   created_at: Date,
   updated_at: Date

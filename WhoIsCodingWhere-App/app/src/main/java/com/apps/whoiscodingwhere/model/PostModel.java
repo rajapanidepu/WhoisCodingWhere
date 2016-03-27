@@ -6,10 +6,21 @@ import android.location.Location;
  * Created by rpanidep on 3/25/2016.
  */
 public class PostModel {
+    String userId;
+    String name;
     String languages;
     String info;
     Location location;
     Boolean isHelpNeeded;
+
+    public PostModel(String userId, String name, String languages, String info, Location location, Boolean isHelpNeeded) {
+        this.userId = userId;
+        this.name = name;
+        this.languages = languages;
+        this.info = info;
+        this.location = location;
+        this.isHelpNeeded = isHelpNeeded;
+    }
 
     public String getUserId() {
         return userId;
@@ -17,17 +28,6 @@ public class PostModel {
 
     public void setUserId(String userId) {
         this.userId = userId;
-    }
-
-    String userId;
-    String userName;
-
-    public PostModel(String userName, String languages, String info, Location location, Boolean isHelpNeeded) {
-        this.languages = languages;
-        this.userName = userName;
-        this.isHelpNeeded = isHelpNeeded;
-        this.location = location;
-        this.info = info;
     }
 
     public String getInfo() {
@@ -63,11 +63,11 @@ public class PostModel {
     }
 
     public String getUserName() {
-        return userName;
+        return name;
     }
 
     public void setUserName(String userName) {
-        this.userName = userName;
+        this.name = userName;
     }
 
 }

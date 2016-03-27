@@ -2,9 +2,11 @@ package com.apps.whoiscodingwhere.activities;
 
 
 import android.Manifest;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -28,6 +30,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -40,7 +43,8 @@ import com.apps.whoiscodingwhere.R;
 import com.apps.whoiscodingwhere.adapter.PostsAdapter;
 import com.apps.whoiscodingwhere.constants.Constants;
 import com.apps.whoiscodingwhere.model.PostModel;
-import com.apps.whoiscodingwhere.model.PostsResponse;
+import com.facebook.AccessToken;
+import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.ConnectionResult;
@@ -56,6 +60,9 @@ import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.gson.Gson;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +74,7 @@ public class MainActivity extends AppCompatActivity
     Location mLastLocation;
     PendingResult<LocationSettingsResult> result;
     ArrayList<PostModel> myDataset = new ArrayList<PostModel>();
+    SharedPreferences prefs;
     private int MY_PERMISSIONS_REQUEST_LOCATION = 2;
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
@@ -83,6 +91,9 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        prefs = this.getSharedPreferences(
+                "com.apps.whoiscodingwhere", Context.MODE_PRIVATE);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -106,12 +117,12 @@ public class MainActivity extends AppCompatActivity
                                 final String lang = languages.getText().toString();
                                 EditText info = (EditText) dialogView.findViewById(R.id.etInfo);
                                 final String infotext = info.getText().toString();
-                                myDataset.add(new PostModel(lang, lang, infotext, null, false));
+                                myDataset.add(new PostModel(AccessToken.getCurrentAccessToken().getUserId(), prefs.getString("name", "invalid"), lang, infotext, null, false));
                                 mAdapter.notifyDataSetChanged();
 
 
                                 RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-                                StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.ServerURL + "/post",
+                                StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.ServerURL + "/posts",
                                         new Response.Listener<String>() {
                                             @Override
                                             public void onResponse(String response) {
@@ -128,7 +139,9 @@ public class MainActivity extends AppCompatActivity
                                     protected Map<String, String> getParams() {
                                         Map<String, String> params = new HashMap<String, String>();
                                         params.put("languages", lang);
-                                        params.put("indo", infotext);
+                                        params.put("info", infotext);
+                                        params.put("userId", AccessToken.getCurrentAccessToken().getUserId());
+                                        params.put("name", prefs.getString("name", "invalid"));
                                         return params;
                                     }
 
@@ -161,16 +174,20 @@ public class MainActivity extends AppCompatActivity
 
         // use a linear layout manager
         mLayoutManager = new LinearLayoutManager(this);
-        loadPostsFromServer();
-        myDataset.add(new PostModel("Raja", "Java", "", null, true));
-        myDataset.add(new PostModel("Teja", "C++", "", null, true));
-        myDataset.add(new PostModel("Ravi", "PHP", "", null, false));
+        mRecyclerView.setLayoutManager(mLayoutManager);
 
+        loadPostsFromServer();
         mAdapter = new PostsAdapter(myDataset);
         mRecyclerView.setAdapter(mAdapter);
 
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        ProfilePictureView profilePictureView;
+        profilePictureView = (ProfilePictureView) navigationView.findViewById(R.id.friendProfilePicture);
+        profilePictureView.setProfileId(AccessToken.getCurrentAccessToken().getUserId());
+
+        TextView tvUserName = (TextView) navigationView.findViewById(R.id.tvUserName);
+        tvUserName.setText(prefs.getString("name", "invalid"));
         navigationView.setNavigationItemSelectedListener(this);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -206,9 +223,22 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void parseJsonArray(String jsonString) {
-        Gson gson = new Gson();
-        PostsResponse pr = gson.fromJson(jsonString.toString(), PostsResponse.class);
-        myDataset.addAll(pr.getPosts());
+        try {
+            Gson gson = new Gson();
+            JSONObject json = new JSONObject(jsonString);
+            JSONArray posts = json.getJSONArray("PostsResponse");
+            for (int i = 0; i < posts.length(); i++) {
+                String postString = posts.optJSONObject(i).toString();
+                PostModel post = gson.fromJson(postString, PostModel.class);
+                Log.e("rpanidep", "" + gson.toJson(post).toString());
+                myDataset.add(post);
+                mAdapter.notifyDataSetChanged();
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
 
