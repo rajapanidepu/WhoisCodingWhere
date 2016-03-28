@@ -111,10 +111,10 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
         // If the access token is available already assign it.
         AccessToken accessToken = AccessToken.getCurrentAccessToken();
         if (accessToken != null) {
-            Log.e("rpanidep", "accessToken = " + accessToken.getToken());
+            Log.e("rpanidep", "LoginActivity: accessToken = " + accessToken.getToken());
             getUserFacebookInfo();
         } else {
-            Log.e("rpanidep", "accessToken is null");
+            Log.e("rpanidep", "LoginActivity: accessToken is null");
         }
 
         if (!prefs.getString("accesstoken", "invalid").equals("invalid")) {
@@ -200,7 +200,6 @@ public class LoginActivity extends AppCompatActivity implements LoaderCallbacks<
                                 prefs.edit().putString("name", object.getString("name")).apply();
                                 prefs.edit().putString("first_name", object.getString("first_name")).apply();
                                 prefs.edit().putString("last_name", object.getString("last_name")).apply();
-                                prefs.edit().putString("email", object.getString("email")).apply();
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }

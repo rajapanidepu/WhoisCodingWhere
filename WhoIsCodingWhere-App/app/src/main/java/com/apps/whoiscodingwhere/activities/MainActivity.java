@@ -2,6 +2,7 @@ package com.apps.whoiscodingwhere.activities;
 
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -10,12 +11,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -28,9 +31,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
@@ -44,6 +47,7 @@ import com.apps.whoiscodingwhere.adapter.PostsAdapter;
 import com.apps.whoiscodingwhere.constants.Constants;
 import com.apps.whoiscodingwhere.model.PostModel;
 import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
 import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
@@ -58,6 +62,7 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.maps.GoogleMap;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -71,6 +76,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final int REQUEST_CHECK_SETTINGS = 1;
+    public static FragmentManager fragmentManager;
     Location mLastLocation;
     PendingResult<LocationSettingsResult> result;
     ArrayList<PostModel> myDataset = new ArrayList<PostModel>();
@@ -79,12 +85,14 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
 
+    @TargetApi(Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -92,8 +100,21 @@ public class MainActivity extends AppCompatActivity
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        fragmentManager = getSupportFragmentManager();
+
         prefs = this.getSharedPreferences(
                 "com.apps.whoiscodingwhere", Context.MODE_PRIVATE);
+
+        AccessTokenTracker accessTokenTracker = new AccessTokenTracker() {
+            @Override
+            protected void onCurrentAccessTokenChanged(
+                    AccessToken oldAccessToken,
+                    AccessToken currentAccessToken) {
+                // Set the access token using
+                // currentAccessToken when it's loaded or set.
+                Log.e("rpanidep", "Main Activity : updated accessToken = " + currentAccessToken.getToken());
+            }
+        };
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -176,30 +197,49 @@ public class MainActivity extends AppCompatActivity
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        loadPostsFromServer();
-        mAdapter = new PostsAdapter(myDataset);
+        myDataset.add(new PostModel("23456", "Raja", "Java", "", null, true));
+        myDataset.add(new PostModel("6543", "Teja", "C++", "", null, true));
+        myDataset.add(new PostModel("65432", "Ravi", "PHP", "", null, false));
+
+        //loadPostsFromServer();
+        mAdapter = new PostsAdapter(myDataset,getApplicationContext());
         mRecyclerView.setAdapter(mAdapter);
 
+       mRecyclerView.setOnTouchListener(new View.OnTouchListener() {
+           @Override
+           public boolean onTouch(View v, MotionEvent event) {
+               Log.e("rpanidep",""+v.getId());
+               return true;
+           }
+       });
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        ProfilePictureView profilePictureView;
-        profilePictureView = (ProfilePictureView) navigationView.findViewById(R.id.friendProfilePicture);
-        profilePictureView.setProfileId(AccessToken.getCurrentAccessToken().getUserId());
+        ProfilePictureView navProfilePictureView;
 
-        TextView tvUserName = (TextView) navigationView.findViewById(R.id.tvUserName);
-        tvUserName.setText(prefs.getString("name", "invalid"));
+        navProfilePictureView = (ProfilePictureView) navigationView.getHeaderView(0).findViewById(R.id.navProfilePicture);
+        String profileId = AccessToken.getCurrentAccessToken().getUserId();
+
+        if (profileId != null) {
+            navProfilePictureView.setProfileId(profileId);
+
+        } else {
+            Log.e("rpanidep", "ERROR - PROFILE ID is NULL");
+        }
+//        TextView tvUserName = (TextView) navigationView.getHeaderView(0).findViewById(R.id.tvUserName);
+//        tvUserName.setText(prefs.getString("name", "invalid"));
+
+//        TextView tvEmail = (TextView) navigationView.getHeaderView(0).findViewById(R.id.tvEmail);
+//        tvEmail.setText(prefs.getString("email","invalid"));
         navigationView.setNavigationItemSelectedListener(this);
         // ATTENTION: This was auto-generated to implement the App Indexing API.
         // See https://g.co/AppIndexing/AndroidStudio for more information.
         client = new GoogleApiClient.Builder(this).addOnConnectionFailedListener(this).addConnectionCallbacks(this).addApi(AppIndex.API).addApi(LocationServices.API).build();
 
-
     }
 
     private void loadPostsFromServer() {
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        String uri = String.format(Constants.ServerURL + "/posts?userid=%1$s",
-                "   ");
+        String uri = String.format(Constants.ServerURL + "/posts?userid=%1$s", "   ");
         Log.e("rpanidep", "Loading posts from server");
         StringRequest myReq = new StringRequest(Request.Method.GET,
                 uri,
@@ -424,4 +464,6 @@ public class MainActivity extends AppCompatActivity
             Log.e("rpanidep", MY_PERMISSIONS_REQUEST_LOCATION + " At onActivityRequest " + resultCode);
         }
     }
+
+
 }
