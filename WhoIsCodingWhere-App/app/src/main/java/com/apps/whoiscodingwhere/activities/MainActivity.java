@@ -197,9 +197,9 @@ public class MainActivity extends AppCompatActivity
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        myDataset.add(new PostModel("23456", "Raja", "Java", "", null, true));
-        myDataset.add(new PostModel("6543", "Teja", "C++", "", null, true));
-        myDataset.add(new PostModel("65432", "Ravi", "PHP", "", null, false));
+//        myDataset.add(new PostModel("23456", "Raja", "Java", "", null, true));
+//        myDataset.add(new PostModel("6543", "Teja", "C++", "", null, true));
+//        myDataset.add(new PostModel("65432", "Ravi", "PHP", "", null, false));
 
         //loadPostsFromServer();
         mAdapter = new PostsAdapter(myDataset,getApplicationContext());
