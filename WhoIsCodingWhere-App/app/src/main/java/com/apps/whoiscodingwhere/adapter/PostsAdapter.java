@@ -128,7 +128,30 @@ public class PostsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             v.setNestedScrollingEnabled(false);
             SupportMapFragment mapFragment = (SupportMapFragment) MainActivity.fragmentManager.findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
-          
+            mapFragment.getView().setNestedScrollingEnabled(false);
+            mapFragment.getView().setScrollContainer(false);
+            mapFragment.getView().setEnabled(false);
+            mView.setClickable(true);
+            mView.setFocusable(true);
+            mView.setDuplicateParentStateEnabled(false);
+            mView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    Log.e("rpanidep",""+event.getAction());
+                    return false;
+                }
+            });
+
+            mView.setNestedScrollingEnabled(false);
+            mView.setNestedScrollingEnabled(false);
+            mView.setScrollContainer(false);
+            mView.setEnabled(false);
+            mView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Log.e("rpanidep","Here I am");
+                }
+            });
 
 
         }
