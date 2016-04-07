@@ -27,7 +27,6 @@
     <string name="section_format">Hello World from section: %1$d</string>
     <string name="google_app_id">317952546180</string>
     <string name="title_activity_maps">Map</string>
-    <string name="gcm_defaultSenderId" />
 
     <string name="gcm_send_message">Token retrieved and sent to server! You can now use gcmsender to
         send downstream messages to this app.</string>

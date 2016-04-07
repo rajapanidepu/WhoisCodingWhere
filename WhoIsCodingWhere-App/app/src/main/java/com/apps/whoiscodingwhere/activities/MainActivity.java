@@ -5,9 +5,11 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -15,6 +17,7 @@ import android.location.Location;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
@@ -23,6 +26,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -48,6 +52,8 @@ import com.android.volley.toolbox.Volley;
 import com.apps.whoiscodingwhere.R;
 import com.apps.whoiscodingwhere.adapter.PostsAdapter;
 import com.apps.whoiscodingwhere.constants.Constants;
+import com.apps.whoiscodingwhere.gcm.QuickstartPreferences;
+import com.apps.whoiscodingwhere.gcm.RegistrationIntentService;
 import com.apps.whoiscodingwhere.model.PostModel;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -55,6 +61,7 @@ import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.appindexing.Action;
 import com.google.android.gms.appindexing.AppIndex;
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
 import com.google.android.gms.common.api.ResultCallback;
@@ -79,6 +86,8 @@ public class MainActivity extends AppCompatActivity
 
     private static final int REQUEST_CHECK_SETTINGS = 1;
     private static final int NOTIFICATION_ID = 123;
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+    private static final String TAG = "MainActivity";
     public static FragmentManager fragmentManager;
     public static Location mLastLocation;
     PendingResult<LocationSettingsResult> result;
@@ -88,7 +97,9 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView mRecyclerView;
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
+    private BroadcastReceiver mRegistrationBroadcastReceiver;
 
+    private boolean isReceiverRegistered;
 
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
@@ -103,6 +114,32 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mRegistrationBroadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                SharedPreferences sharedPreferences =
+                        PreferenceManager.getDefaultSharedPreferences(context);
+                boolean sentToken = sharedPreferences
+                        .getBoolean(QuickstartPreferences.SENT_TOKEN_TO_SERVER, false);
+                if (sentToken) {
+                    Log.e(TAG, "onReceive: " + getString(R.string.gcm_send_message));
+                } else {
+                    Log.e(TAG, "onReceive: " + getString(R.string.token_error_message));
+                }
+            }
+        };
+
+
+        registerReceiver();
+
+        if (checkPlayServices()) {
+            // Start IntentService to register this application with GCM.
+            Log.e(TAG, "onCreate: starting service" );
+            Intent intent = new Intent(this, RegistrationIntentService.class);
+            startService(intent);
+        }else{
+            Log.e(TAG, "onCreate: play services failed" );
+        }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -505,6 +542,42 @@ public class MainActivity extends AppCompatActivity
      * it doesn't, display a dialog that allows users to download the APK from
      * the Google Play Store or enable it in the device's system settings.
      */
+    private boolean checkPlayServices() {
+        GoogleApiAvailability apiAvailability = GoogleApiAvailability.getInstance();
+        int resultCode = apiAvailability.isGooglePlayServicesAvailable(this);
+        Log.e(TAG, "checkPlayServices: "+resultCode );
+        if (resultCode != ConnectionResult.SUCCESS) {
+            if (apiAvailability.isUserResolvableError(resultCode)) {
+                apiAvailability.getErrorDialog(this, resultCode, PLAY_SERVICES_RESOLUTION_REQUEST)
+                        .show();
+            } else {
+                Log.i(TAG, "This device is not supported.");
+                finish();
+            }
+            return false;
+        }
+        Log.e(TAG, "checkPlayServices: returning true for playservices");
+        return true;
+    }
 
+    private void registerReceiver() {
+        if (!isReceiverRegistered) {
+            LocalBroadcastManager.getInstance(this).registerReceiver(mRegistrationBroadcastReceiver,
+                    new IntentFilter(QuickstartPreferences.REGISTRATION_COMPLETE));
+            isReceiverRegistered = true;
+        }
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mRegistrationBroadcastReceiver);
+        isReceiverRegistered = false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        registerReceiver();
+    }
 }
