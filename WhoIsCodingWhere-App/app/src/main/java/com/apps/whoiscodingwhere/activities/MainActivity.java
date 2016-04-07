@@ -31,7 +31,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.EditText;
 
@@ -62,7 +61,6 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStates;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.maps.GoogleMap;
 import com.google.gson.Gson;
 
 import org.json.JSONArray;
@@ -202,16 +200,8 @@ public class MainActivity extends AppCompatActivity
         myDataset.add(new PostModel("65432", "Ravi", "PHP", "", null, false));
 
         //loadPostsFromServer();
-        mAdapter = new PostsAdapter(myDataset,getApplicationContext());
+        mAdapter = new PostsAdapter(myDataset, getApplicationContext());
         mRecyclerView.setAdapter(mAdapter);
-
-       mRecyclerView.setOnTouchListener(new View.OnTouchListener() {
-           @Override
-           public boolean onTouch(View v, MotionEvent event) {
-               Log.e("rpanidep",""+v.getId());
-               return true;
-           }
-       });
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         ProfilePictureView navProfilePictureView;

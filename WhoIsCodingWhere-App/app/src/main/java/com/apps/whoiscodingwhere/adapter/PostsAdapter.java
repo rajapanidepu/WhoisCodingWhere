@@ -2,21 +2,19 @@ package com.apps.whoiscodingwhere.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import com.apps.whoiscodingwhere.R;
 import com.apps.whoiscodingwhere.activities.MainActivity;
+import com.apps.whoiscodingwhere.fragment.WorkaroundMapFragment;
 import com.apps.whoiscodingwhere.model.PostModel;
 import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
@@ -126,30 +124,13 @@ public class PostsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             super(v);
             mView = v;
             v.setNestedScrollingEnabled(false);
-            SupportMapFragment mapFragment = (SupportMapFragment) MainActivity.fragmentManager.findFragmentById(R.id.map);
+            WorkaroundMapFragment mapFragment = (WorkaroundMapFragment) MainActivity.fragmentManager.findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
-            mapFragment.getView().setNestedScrollingEnabled(false);
-            mapFragment.getView().setScrollContainer(false);
-            mapFragment.getView().setEnabled(false);
-            mView.setClickable(true);
-            mView.setFocusable(true);
-            mView.setDuplicateParentStateEnabled(false);
-            mView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    Log.e("rpanidep",""+event.getAction());
-                    return false;
-                }
-            });
 
-            mView.setNestedScrollingEnabled(false);
-            mView.setNestedScrollingEnabled(false);
-            mView.setScrollContainer(false);
-            mView.setEnabled(false);
-            mView.setOnClickListener(new View.OnClickListener() {
+            mapFragment.setListener(new WorkaroundMapFragment.OnTouchListener() {
                 @Override
-                public void onClick(View v) {
-                    Log.e("rpanidep","Here I am");
+                public void onTouch() {
+                    mView.getParent().requestDisallowInterceptTouchEvent(true);
                 }
             });
 
