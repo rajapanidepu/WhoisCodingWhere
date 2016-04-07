@@ -1,7 +1,5 @@
 package com.apps.whoiscodingwhere.model;
 
-import android.location.Location;
-
 /**
  * Created by rpanidep on 3/25/2016.
  */
@@ -10,16 +8,34 @@ public class PostModel {
     String name;
     String languages;
     String info;
-    Location location;
+    String latitude;
+    String longitude;
     Boolean isHelpNeeded;
 
-    public PostModel(String userId, String name, String languages, String info, Location location, Boolean isHelpNeeded) {
+    public PostModel(String userId, String name, String languages, String info, String latitude, String longitude, Boolean isHelpNeeded) {
         this.userId = userId;
         this.name = name;
         this.languages = languages;
         this.info = info;
-        this.location = location;
+        this.latitude = latitude;
+        this.longitude = longitude;
         this.isHelpNeeded = isHelpNeeded;
+    }
+
+    public String getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(String latitude) {
+        this.latitude = latitude;
+    }
+
+    public String getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(String longitude) {
+        this.longitude = longitude;
     }
 
     public String getUserId() {
@@ -46,13 +62,6 @@ public class PostModel {
         isHelpNeeded = helpNeeded;
     }
 
-    public Location getLocation() {
-        return location;
-    }
-
-    public void setLocation(Location location) {
-        this.location = location;
-    }
 
     public String getLanguages() {
         return languages;

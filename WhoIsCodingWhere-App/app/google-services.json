@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_id": "whoiscodingwhere",
+    "project_number": "317952546180",
+    "name": "WhoisCodingWhere"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:317952546180:android:32549414e25b37b7",
+        "client_id": "android:com.apps.whoiscodingwhere",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.apps.whoiscodingwhere",
+          "certificate_hash": []
+        }
+      },
+      "oauth_client": [],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 2,
+          "analytics_property": {
+            "tracking_id": "UA-76136471-1"
+          }
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 1
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}

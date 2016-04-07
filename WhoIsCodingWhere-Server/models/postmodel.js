@@ -4,7 +4,8 @@ var Schema = mongoose.Schema;
 // create a schema
 var postSchema = new Schema({
   name: String,
-  location: String,
+  latitude: String,
+  longitude: String,
   languages: String,
   info: String,
   userId:String,

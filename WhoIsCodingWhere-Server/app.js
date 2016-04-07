@@ -11,7 +11,7 @@ var users = require('./routes/users');
 var posts = require('./routes/posts');
 
 var app = express();
-mongoose.connect('mongodb://localhost:27017/whoiscodingwhere');
+mongoose.connect('mongodb://ravitejas3:raviteja@ds019990.mlab.com:19990/whoiscodingwhere');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

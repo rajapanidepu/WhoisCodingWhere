@@ -3,6 +3,8 @@ package com.apps.whoiscodingwhere.activities;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -19,6 +21,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
@@ -74,8 +78,9 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final int REQUEST_CHECK_SETTINGS = 1;
+    private static final int NOTIFICATION_ID = 123;
     public static FragmentManager fragmentManager;
-    Location mLastLocation;
+    public static Location mLastLocation;
     PendingResult<LocationSettingsResult> result;
     ArrayList<PostModel> myDataset = new ArrayList<PostModel>();
     SharedPreferences prefs;
@@ -84,17 +89,21 @@ public class MainActivity extends AppCompatActivity
     private RecyclerView.Adapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
 
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
     private GoogleApiClient client;
 
+
     @TargetApi(Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -136,10 +145,41 @@ public class MainActivity extends AppCompatActivity
                                 final String lang = languages.getText().toString();
                                 EditText info = (EditText) dialogView.findViewById(R.id.etInfo);
                                 final String infotext = info.getText().toString();
-                                myDataset.add(new PostModel(AccessToken.getCurrentAccessToken().getUserId(), prefs.getString("name", "invalid"), lang, infotext, null, false));
+                                myDataset.add(new PostModel(AccessToken.getCurrentAccessToken().getUserId(), prefs.getString("name", "invalid"), lang, infotext, null, null, false));
                                 mAdapter.notifyDataSetChanged();
 
+                                //create notification
+                                NotificationCompat.Builder mBuilder =
+                                        new NotificationCompat.Builder(getApplicationContext())
+                                                .setSmallIcon(R.drawable.com_facebook_button_icon)
+                                                .setContentTitle("My notification")
+                                                .setContentText("Hello World!");
 
+                                Intent resultIntent = new Intent(getApplicationContext(), MainActivity.class);
+
+                                // The stack builder object will contain an artificial back stack for the
+                                // started Activity.
+                                // This ensures that navigating backward from the Activity leads out of
+                                // your application to the Home screen.
+                                TaskStackBuilder stackBuilder = TaskStackBuilder.create(getApplicationContext());
+                                // Adds the back stack for the Intent (but not the Intent itself)
+                                stackBuilder.addParentStack(MainActivity.class);
+                                // Adds the Intent that starts the Activity to the top of the stack
+                                stackBuilder.addNextIntent(resultIntent);
+                                PendingIntent resultPendingIntent =
+                                        stackBuilder.getPendingIntent(
+                                                0,
+                                                PendingIntent.FLAG_UPDATE_CURRENT
+                                        );
+                                mBuilder.setContentIntent(resultPendingIntent);
+                                mBuilder.addAction(R.drawable.com_facebook_send_button_icon,
+                                        "end", null);
+                                NotificationManager mNotificationManager =
+                                        (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+                                // mId allows you to update the notification later on.
+                                mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+
+                                //sending to server
                                 RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
                                 StringRequest stringRequest = new StringRequest(Request.Method.POST, Constants.ServerURL + "/posts",
                                         new Response.Listener<String>() {
@@ -161,6 +201,10 @@ public class MainActivity extends AppCompatActivity
                                         params.put("info", infotext);
                                         params.put("userId", AccessToken.getCurrentAccessToken().getUserId());
                                         params.put("name", prefs.getString("name", "invalid"));
+                                        if (mLastLocation != null) {
+                                            params.put("latitude", "" + mLastLocation.getLatitude());
+                                            params.put("longitude", "" + mLastLocation.getLongitude());
+                                        }
                                         return params;
                                     }
 
@@ -195,13 +239,15 @@ public class MainActivity extends AppCompatActivity
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
 
-        myDataset.add(new PostModel("23456", "Raja", "Java", "", null, true));
-        myDataset.add(new PostModel("6543", "Teja", "C++", "", null, true));
-        myDataset.add(new PostModel("65432", "Ravi", "PHP", "", null, false));
+//        myDataset.add(new PostModel("23456", "Raja", "Java", "", null, true));
+//
+//        myDataset.add(new PostModel("65432", "Ravi", "PHP", "", null, false));
+//        myDataset.add(new PostModel("6543", "Teja", "C++", "", null, true));
 
-        //loadPostsFromServer();
+        loadPostsFromServer();
         mAdapter = new PostsAdapter(myDataset, getApplicationContext());
         mRecyclerView.setAdapter(mAdapter);
+
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         ProfilePictureView navProfilePictureView;
@@ -227,9 +273,10 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+
     private void loadPostsFromServer() {
         RequestQueue queue = Volley.newRequestQueue(getApplicationContext());
-        String uri = String.format(Constants.ServerURL + "/posts?userid=%1$s", "   ");
+        String uri = String.format(Constants.ServerURL + "/posts");
         Log.e("rpanidep", "Loading posts from server");
         StringRequest myReq = new StringRequest(Request.Method.GET,
                 uri,
@@ -265,6 +312,7 @@ public class MainActivity extends AppCompatActivity
                 mAdapter.notifyDataSetChanged();
             }
 
+            ((PostsAdapter) mAdapter).addMarkers();
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -373,13 +421,7 @@ public class MainActivity extends AppCompatActivity
     public void onConnected(@Nullable Bundle bundle) {
         Log.e("rpanidep", "at onConnected");
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
+
             ActivityCompat.requestPermissions(MainActivity.this,
                     new String[]{Manifest.permission.ACCESS_COARSE_LOCATION},
                     MY_PERMISSIONS_REQUEST_LOCATION);
@@ -387,8 +429,11 @@ public class MainActivity extends AppCompatActivity
         } else {
             mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                     client);
-            if (mLastLocation != null)
+            if (mLastLocation != null) {
                 Log.e("rpanidep", "lati " + mLastLocation.getLatitude() + " longi " + mLastLocation.getLongitude());
+                ((PostsAdapter) mAdapter).updateLocation(mLastLocation);
+
+            }
 
             LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                     .addLocationRequest(new LocationRequest());
@@ -454,6 +499,12 @@ public class MainActivity extends AppCompatActivity
             Log.e("rpanidep", MY_PERMISSIONS_REQUEST_LOCATION + " At onActivityRequest " + resultCode);
         }
     }
+
+    /**
+     * Check the device to make sure it has the Google Play Services APK. If
+     * it doesn't, display a dialog that allows users to download the APK from
+     * the Google Play Store or enable it in the device's system settings.
+     */
 
 
 }

@@ -1,7 +1,12 @@
 package com.apps.whoiscodingwhere.adapter;
 
+import android.Manifest;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,16 +31,16 @@ import java.util.ArrayList;
 public class PostsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private static final int TYPE_HEADER = 0;
     private static final int TYPE_ITEM = 1;
+    private static final String TAG = "POSTSADAPTER";
+    private ViewHeaderHolder VHheader;
     private ArrayList<PostModel> mDataset;
     private Context context;
-
 
     // Provide a suitable constructor (depends on the kind of dataset)
     public PostsAdapter(ArrayList<PostModel> myDataset, Context context) {
         mDataset = myDataset;
         this.context = context;
     }
-
 
     // Create new views (invoked by the layout manager)
     @Override
@@ -63,8 +68,9 @@ public class PostsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
+        Log.e(TAG, "onBindViewHolder: onBindView");
         if (holder instanceof ViewHeaderHolder) {
-            ViewHeaderHolder VHheader = (ViewHeaderHolder) holder;
+            setVHheader((ViewHeaderHolder) holder);
 
         } else if (holder instanceof ViewHolder) {
             position = position - 1;
@@ -96,6 +102,29 @@ public class PostsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
         return position == 0;
     }
 
+    public ViewHeaderHolder getVHheader() {
+        return VHheader;
+    }
+
+    public void setVHheader(ViewHeaderHolder VHheader) {
+        this.VHheader = VHheader;
+    }
+
+    public void updateLocation(Location mLastLocation) {
+//        getVHheader().mMap.addMarker(new MarkerOptions().position(new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude())).title("My Location"));
+//        getVHheader().mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+//                new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude()), 14));
+    }
+
+    public void addMarkers() {
+        for (PostModel post : mDataset) {
+            Log.e(TAG, "onMapReady: " + post.getUserName());
+            if (post.getLatitude() != null && post.getLongitude() != null && getVHheader().mMap != null)
+                getVHheader().mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(post.getLatitude()), Double.parseDouble(post.getLongitude()))).title(post.getUserName()));
+
+        }
+    }
+
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
     // you provide access to all the views for a data item in a view holder
@@ -115,7 +144,8 @@ public class PostsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
     }
 
-    public static class ViewHeaderHolder extends RecyclerView.ViewHolder implements OnMapReadyCallback {
+
+    public class ViewHeaderHolder extends RecyclerView.ViewHolder implements OnMapReadyCallback {
         // each data item is just a string in this case
         public View mView;
         private GoogleMap mMap;
@@ -137,15 +167,44 @@ public class PostsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
 
         }
 
+        public GoogleMap getmMap() {
+            return mMap;
+        }
+
+        public void setmMap(GoogleMap mMap) {
+            this.mMap = mMap;
+        }
 
         @Override
         public void onMapReady(GoogleMap googleMap) {
             mMap = googleMap;
 
             // Add a marker in Sydney, Australia, and move the camera.
-            LatLng sydney = new LatLng(-34, 151);
-            mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
+
+            if (MainActivity.mLastLocation != null) {
+                LatLng sydney = new LatLng(MainActivity.mLastLocation.getLatitude(), MainActivity.mLastLocation.getLongitude());
+                if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
+                    return;
+                }
+                mMap.setMyLocationEnabled(true);
+                mMap.animateCamera(CameraUpdateFactory.zoomTo(15), 2000, null);
+
+//                mMap.addMarker(new MarkerOptions().position(sydney).title("My Location"));
+
+                addMarkers();
+//                for (PostModel post : mDataset) {
+//                    Log.e(TAG, "onMapReady: " + post.getUserName());
+//                    mMap.addMarker(new MarkerOptions().position(new LatLng(Double.parseDouble(post.getLatitude()), Double.parseDouble(post.getLongitude()))).title(post.getUserName()));
+//                }
+            }
+
         }
     }
 }
